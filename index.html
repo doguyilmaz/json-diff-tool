@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Diff Comparison Tool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #drag-frame {
+      display: none;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col" ondragover="handleDragOverPage(event)"
+  ondragleave="handleDragLeavePage(event)" ondrop="handleDropPage(event)">
+  <div id="drag-frame" class="fixed inset-0 border-4 border-blue-500 pointer-events-none"></div>
+
+  <div class="flex-grow">
+    <header class="bg-blue-600 text-white py-4 shadow-md">
+      <div class="container mx-auto px-4">
+        <h1 class="text-2xl font-bold text-center">JSON Diff Comparison Tool</h1>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <label id="label-json1" for="json1" class="block text-lg font-semibold text-gray-700">JSON 1</label>
+          <textarea id="json1" placeholder="Paste or drop JSON 1 here"
+            class="mt-2 w-full h-48 p-4 border-2 border-dashed rounded-lg text-gray-700 focus:border-blue-500 focus:outline-none"
+            ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+            ondrop="handleDrop(event, 'json1')"></textarea>
+          <button class="mt-2 text-sm text-red-600 hover:underline" onclick="clearInput('json1')">Clear JSON 1</button>
+        </div>
+
+        <div>
+          <label id="label-json2" for="json2" class="block text-lg font-semibold text-gray-700">JSON 2</label>
+          <textarea id="json2" placeholder="Paste or drop JSON 2 here"
+            class="mt-2 w-full h-48 p-4 border-2 border-dashed rounded-lg text-gray-700 focus:border-blue-500 focus:outline-none"
+            ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+            ondrop="handleDrop(event, 'json2')"></textarea>
+          <button class="mt-2 text-sm text-red-600 hover:underline" onclick="clearInput('json2')">Clear JSON 2</button>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button id="keyComparisonBtn" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+          onclick="toggleComparison('key')">Key Comparison</button>
+        <button id="diffComparisonBtn" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 ml-4"
+          onclick="toggleComparison('diff')">Diff Comparison</button>
+      </div>
+
+      <div class="mt-4 text-center">
+        <label class="inline-flex items-center">
+          <input type="checkbox" id="compareValuesCheckbox" class="form-checkbox h-5 w-5 text-blue-600"
+            onclick="toggleCompareValues()">
+          <span class="ml-2 text-gray-700">Compare Values</span>
+        </label>
+      </div>
+
+      <div id="key-comparison-section">
+        <h2 class="text-xl font-bold mt-8 text-center text-gray-700">Key Differences</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+          <div>
+            <h3 id="missing-json1-title" class="text-lg font-semibold text-gray-800">Missing in JSON 1 but exists in
+              JSON 2:</h3>
+            <pre id="missing-json1" class="mt-2 bg-gray-200 p-4 rounded-lg text-sm text-gray-700 overflow-auto"></pre>
+          </div>
+
+          <div>
+            <h3 id="missing-json2-title" class="text-lg font-semibold text-gray-800">Missing in JSON 2 but exists in
+              JSON 1:</h3>
+            <pre id="missing-json2" class="mt-2 bg-gray-200 p-4 rounded-lg text-sm text-gray-700 overflow-auto"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="diff-comparison-section" class="hidden mt-8">
+        <h2 class="text-xl font-bold mt-8 text-center text-gray-700">Detailed Diff</h2>
+        <pre id="diff-result" class="mt-4 bg-gray-200 p-4 rounded-lg text-sm text-gray-700 overflow-auto"></pre>
+      </div>
+    </main>
+  </div>
+
+  <footer class="bg-gray-200 text-center py-4 mt-8 text-sm">
+    Built with ❤️ using Tailwind CSS and Diff.js
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.0.0/diff.min.js"></script>
+  <script>
+    const dragFrame = document.getElementById('drag-frame');
+    const json1Textarea = document.getElementById('json1');
+    const json2Textarea = document.getElementById('json2');
+    let fileNames = { json1: "JSON 1", json2: "JSON 2" };
+
+    json1Textarea.addEventListener('input', () => {
+      addEditedLabel('json1');
+      compareJsonKeys();
+      generateCustomDiff();
+    });
+
+    json2Textarea.addEventListener('input', () => {
+      addEditedLabel('json2');
+      compareJsonKeys();
+      generateCustomDiff();
+    });
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.target.classList.add('border-blue-500');
+    }
+
+    function handleDragLeave(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.target.classList.remove('border-blue-500');
+    }
+
+    function handleDrop(event, targetId) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.target.classList.remove("border-blue-500");
+
+      const files = event.dataTransfer.files;
+
+      if (files.length > 0) {
+        handleFileDrop(files[0], targetId);
+      }
+    }
+
+    function handleDragOverPage(event) {
+      event.preventDefault();
+      dragFrame.style.display = 'block';
+    }
+
+    function handleDragLeavePage(event) {
+      if (!event.relatedTarget || !document.body.contains(event.relatedTarget)) {
+        dragFrame.style.display = 'none';
+      }
+    }
+
+    function handleDropPage(event) {
+      event.preventDefault();
+      dragFrame.style.display = 'none';
+      if (event.target.id === 'json1' || event.target.id === 'json2') {
+        return;
+      }
+
+      const files = event.dataTransfer.files;
+
+      if (files.length === 1) {
+        if (json1Textarea.value.trim() === "") {
+          handleFileDrop(files[0], 'json1');
+        } else if (json2Textarea.value.trim() === "") {
+          handleFileDrop(files[0], 'json2');
+        } else {
+          const override = confirm("First input is already filled. Do you want to override?");
+          if (override) {
+            handleFileDrop(files[0], 'json1');
+          }
+        }
+      } else if (files.length === 2) {
+        if (json1Textarea.value.trim() !== "" && json2Textarea.value.trim() !== "") {
+          const overrideBoth = confirm("Both inputs are already filled. Do you want to override both?");
+          if (overrideBoth) {
+            handleFileDrop(files[0], 'json1');
+            handleFileDrop(files[1], 'json2');
+          }
+        } else {
+          handleFileDrop(files[0], 'json1');
+          handleFileDrop(files[1], 'json2');
+        }
+      } else if (files.length > 2) {
+        const overrideAll = confirm("Both inputs will be replaced, but only the first two files will be considered. Do you want to continue?");
+        if (overrideAll) {
+          handleFileDrop(files[0], 'json1');
+          handleFileDrop(files[1], 'json2');
+        }
+      }
+    }
+
+    function handleFileDrop(file, targetId) {
+      if (file && file.type === "application/json") {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          document.getElementById(targetId).value = e.target.result;
+          fileNames[targetId] = file.name;
+          updateTitles();
+          compareJsonKeys();
+          generateCustomDiff();
+        };
+        reader.readAsText(file);
+      } else {
+        alert("Please drop a valid JSON file.");
+      }
+    }
+
+    function addEditedLabel(targetId) {
+      if (!fileNames[targetId].includes("(edited)")) {
+        fileNames[targetId] += " (edited)";
+        updateTitles();
+      }
+    }
+
+    function clearInput(targetId) {
+      document.getElementById(targetId).value = "";
+      fileNames[targetId] = `JSON ${targetId === "json1" ? "1" : "2"}`;
+      updateTitles();
+      compareJsonKeys();
+      generateCustomDiff();
+    }
+
+    function updateTitles() {
+      document.getElementById("label-json1").textContent = fileNames.json1;
+      document.getElementById("label-json2").textContent = fileNames.json2;
+    }
+
+    function toggleComparison(mode) {
+      const keySection = document.getElementById('key-comparison-section');
+      const diffSection = document.getElementById('diff-comparison-section');
+
+      if (mode === 'key') {
+        keySection.classList.remove('hidden');
+        diffSection.classList.add('hidden');
+        compareJsonKeys();
+      } else if (mode === 'diff') {
+        keySection.classList.add('hidden');
+        diffSection.classList.remove('hidden');
+        generateCustomDiff();
+      }
+    }
+
+    function validateJson(jsonString) {
+      try {
+        JSON.parse(jsonString);
+        return { valid: true };
+      } catch (error) {
+        return { valid: false, error: error.message };
+      }
+    }
+
+    function toggleCompareValues() {
+      const compareValuesCheckbox = document.getElementById('compareValuesCheckbox');
+      localStorage.setItem('compareValues', compareValuesCheckbox.checked);
+      compareJsonKeys();
+      generateCustomDiff();
+    }
+
+    function compareJsonKeys() {
+      const json1Input = document.getElementById("json1").value;
+      const json2Input = document.getElementById("json2").value;
+      const missingJson1Element = document.getElementById("missing-json1");
+      const missingJson2Element = document.getElementById("missing-json2");
+      const compareValues = document.getElementById('compareValuesCheckbox').checked;
+
+      if (!json1Input.trim() || !json2Input.trim()) {
+        missingJson1Element.textContent = "Provide both JSON inputs to compare.";
+        missingJson2Element.textContent = "Provide both JSON inputs to compare.";
+        return;
+      }
+
+      const json1Validation = validateJson(json1Input);
+      const json2Validation = validateJson(json2Input);
+
+      if (!json1Validation.valid) {
+        missingJson1Element.textContent = `Invalid JSON input in JSON 1: ${json1Validation.error}`;
+        missingJson2Element.textContent = "";
+        return;
+      }
+
+      if (!json2Validation.valid) {
+        missingJson2Element.textContent = `Invalid JSON input in JSON 2: ${json2Validation.error}`;
+        missingJson1Element.textContent = "";
+        return;
+      }
+
+      try {
+        const json1 = JSON.parse(json1Input);
+        const json2 = JSON.parse(json2Input);
+
+        const missingInJson1 = findMissingKeys(json1, json2, compareValues);
+        const missingInJson2 = findMissingKeys(json2, json1, compareValues);
+
+        missingJson1Element.textContent = JSON.stringify(missingInJson1, null, 2);
+        missingJson2Element.textContent = JSON.stringify(missingInJson2, null, 2);
+      } catch (error) {
+        missingJson1Element.textContent = "Unexpected error during comparison.";
+        missingJson2Element.textContent = "Unexpected error during comparison.";
+      }
+    }
+
+    function findMissingKeys(source, target, compareValues) {
+      let missingKeys = {};
+
+      function recurse(sourceObj, targetObj, result) {
+        for (let key in targetObj) {
+          if (!(key in sourceObj)) {
+            result[key] = targetObj[key];
+          } else if (typeof targetObj[key] === "object" && typeof sourceObj[key] === "object" && targetObj[key] !== null && sourceObj[key] !== null) {
+            result[key] = {};
+            recurse(sourceObj[key], targetObj[key], result[key]);
+            if (Object.keys(result[key]).length === 0) delete result[key];
+          } else if (compareValues && targetObj[key] !== sourceObj[key]) {
+            result[key] = { valueInJson1: sourceObj[key], valueInJson2: targetObj[key] };
+          }
+        }
+      }
+
+      recurse(source, target, missingKeys);
+      return missingKeys;
+    }
+
+    function generateCustomDiff() {
+      const json1Input = document.getElementById("json1").value;
+      const json2Input = document.getElementById("json2").value;
+      const diffResultElement = document.getElementById("diff-result");
+      const compareValues = document.getElementById('compareValuesCheckbox').checked;
+
+      if (!json1Input.trim() || !json2Input.trim()) {
+        diffResultElement.textContent = "Provide both JSON inputs to compare.";
+        return;
+      }
+
+      const json1Validation = validateJson(json1Input);
+      const json2Validation = validateJson(json2Input);
+
+      if (!json1Validation.valid) {
+        diffResultElement.textContent = `Invalid JSON input in JSON 1: ${json1Validation.error}`;
+        return;
+      }
+
+      if (!json2Validation.valid) {
+        diffResultElement.textContent = `Invalid JSON input in JSON 2: ${json2Validation.error}`;
+        return;
+      }
+
+      try {
+        const json1 = JSON.parse(json1Input);
+        const json2 = JSON.parse(json2Input);
+
+        let diffHtml = '';
+
+        function generateDiff(sourceObj, targetObj, path = '') {
+          for (let key in targetObj) {
+            const currentPath = path ? `${path}.${key}` : key;
+            if (!(key in sourceObj)) {
+              diffHtml += `<div style="color: green;">+ ${currentPath}</div>`;
+            } else if (typeof targetObj[key] === "object" && typeof sourceObj[key] === "object" && targetObj[key] !== null && sourceObj[key] !== null) {
+              generateDiff(sourceObj[key], targetObj[key], currentPath);
+            } else if (compareValues && targetObj[key] !== sourceObj[key]) {
+              diffHtml += `<div style="color: orange;">~ ${currentPath}: "${sourceObj[key]}" → "${targetObj[key]}"</div>`;
+            }
+          }
+
+          for (let key in sourceObj) {
+            const currentPath = path ? `${path}.${key}` : key;
+            if (!(key in targetObj)) {
+              diffHtml += `<div style="color: red;">- ${currentPath}</div>`;
+            }
+          }
+        }
+
+        generateDiff(json1, json2);
+        diffResultElement.innerHTML = diffHtml || "No differences found.";
+      } catch (error) {
+        diffResultElement.textContent = `Unexpected error during diff generation: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+
+</html>
