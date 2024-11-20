@@ -1,55 +1,89 @@
-# JSON Comparison Tool
+<div align="center">
+  <h1>JSON Diff Tool</h1>
+  <p>A web-based tool for comparing and analyzing JSON objects with an intuitive interface and powerful features.</p>
 
-A web-based tool for comparing and analyzing JSON objects with an intuitive interface and powerful features.
+  <p>
+    <a href="https://doguyilmaz.github.io/json-diff-tool">View Demo</a>
+    ·
+    <a href="https://github.com/doguyilmaz/json-diff-tool/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/doguyilmaz/json-diff-tool/issues">Request Feature</a>
+  </p>
+</div>
 
-## Features
+## ✨ Features
 
-- 📊 Side-by-side JSON comparison
-- 🎨 Syntax highlighting for better readability
-- 🔍 Detailed difference highlighting
-- ⚡ Real-time comparison updates
-- 🔄 Copy & paste JSON support
-- ✨ Format/prettify JSON automatically
-- ❌ Error handling for invalid JSON
-- 📱 Responsive design for all devices
+- 📊 **Two Comparison Modes**
 
-## Usage
+  - Key Comparison: Shows missing keys in each JSON
+  - Diff Comparison: Detailed view of all differences
 
-1. Simply open `index.html` in your web browser
-2. Enter or paste your JSON data into either the left or right editor
-3. The tool will automatically compare the JSON objects and highlight differences
-4. Use the formatting button to prettify messy JSON
+- 🛠️ **Core Capabilities**
 
-## Error Handling
+  - Compare both keys and values
+  - Highlight differences in nested objects
+  - Support for complex JSON structures
+  - Modern, responsive interface with drag-and-drop
+  - Real-time validation and error handling
+  - Comprehensive diff visualization
+  - Multi-file support
+  - Responsive design for all devices
+  - File name tracking
+  - Automatic JSON validation
+  - Error handling with clear messages
 
-The tool provides clear error messages for:
+## 🚀 Quick Start
 
-- Invalid JSON syntax
-- Empty inputs
-- Non-JSON data formats
+### Online Version
 
-## How It Works
+Visit [JSON Diff Tool](https://doguyilmaz.github.io/json-diff-tool) to use the tool directly in your browser.
 
-This is a lightweight, browser-based tool that:
+### Local Development
 
-- Runs entirely in the browser - no server required
-- Uses vanilla JavaScript for JSON comparison
-- Requires no installation or dependencies
-- Works offline
+1. Clone the repository
 
-## Contributing
+2. Navigate to project directory
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+3. Open `index.html` in your browser
 
-1. Fork the repository
-2. Create your feature branch
-3. Make your changes
-4. Submit a Pull Request
+## 📖 Usage Guide
 
-## License
+### Usage
+
+1. **Input Your JSON**
+
+   - Type or paste JSON directly into the text areas
+   - Drag and drop JSON files into either input
+   - Drop multiple files at once (they'll be automatically placed in empty inputs)
+   - You'll be asked for confirmation before overwriting existing content
+
+2. **Select Comparison Mode**
+
+   - **Key Comparison**: Shows which keys are missing in each JSON
+   - **Diff Comparison**: Shows a detailed view of all differences
+
+3. **Working with the Tool**
+   - Toggle "Compare Values" to check for value differences
+   - Clear inputs using the clear button
+   - View file names and track edited states
+   - See instant comparison results as you type
+   - Get automatic JSON validation with clear error messages
+   - Notice highlighted differences and comparison mode indicators
+
+## 🙏 Acknowledgments
+
+- [Tailwind CSS](https://tailwindcss.com) for the styling framework
+- [Font Awesome](https://fontawesome.com) for the icons
+- [jsdiff](https://github.com/kpdecker/jsdiff) for the diff implementation
+
+## 🔮 Future Improvements
+
+- Dark mode support
+- JSON syntax highlighting
+- Save comparison results
+- More comparison options
+- Keyboard shortcuts
+
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-If you encounter any issues or have questions, please file an issue in the GitHub repository.
