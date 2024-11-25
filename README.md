@@ -44,7 +44,9 @@ Visit [JSON Diff Tool](https://doguyilmaz.github.io/json-diff-tool) to use the t
 
 2. Navigate to project directory
 
-3. Open `index.html` in your browser
+3. Make your changes
+
+4. Open `index.html` in your browser directly or use live server
 
 ## 📖 Usage Guide
 
